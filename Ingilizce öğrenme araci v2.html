@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İngilizce Öğrenme Aracı</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS Kodu Başlangıcı --- */
+        :root {
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --primary-variant-color: #3700b3;
+            --secondary-color: #03dac6;
+            --on-background-color: #e0e0e0;
+            --on-surface-color: #ffffff;
+            --border-color: #333;
+            --hover-color: #2a2a2a;
+            --active-color: #444;
+            --story-text-color: #cccccc;
+            --control-background: #2a2a2a;
+            --tooltip-background: #111;
+            --tooltip-text-color: var(--secondary-color);
+            --tooltip-border-color: var(--primary-color);
+            --exercise-question-color: #b0b0b0;
+            --exercise-answer-color: #e0e0e0;
+            --menu-section-border: #444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--on-background-color);
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            position: relative; /* Tooltip için */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 { text-align: center; color: var(--primary-color); margin-bottom: 25px; font-weight: 700; }
+
+        /* --- Menu Styles --- */
+        .menu-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+        .menu-section { border: 1px solid var(--menu-section-border); border-radius: 6px; padding: 10px; text-align: center; background-color: var(--hover-color); }
+        .menu-section-title { color: var(--primary-color); font-size: 0.9em; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        .menu-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+        .menu-btn { background-color: var(--primary-variant-color); color: var(--on-surface-color); border: none; padding: 8px 12px; cursor: pointer; border-radius: 5px; font-size: 14px; font-weight: bold; transition: background-color 0.3s ease, transform 0.1s ease; flex-shrink: 0; line-height: 1.2; }
+        .menu-btn:hover { background-color: var(--primary-color); transform: translateY(-1px); }
+        .menu-btn.active { background-color: var(--secondary-color); color: var(--background-color); box-shadow: 0 0 5px var(--secondary-color); }
+
+        .loading-message { text-align: center; font-style: italic; color: var(--secondary-color); }
+        #contentArea { margin-top: 20px; overflow-x: auto; /* Tablo taşmasını engelle */ }
+
+        /* --- Table Styles --- */
+        table { width: 100%; border-collapse: collapse; font-size: 16px; table-layout: auto; margin-bottom: 20px; }
+        table, th, td { border: 1px solid var(--border-color); }
+        th, td { padding: 10px 12px; text-align: center; word-wrap: break-word; }
+        th { background-color: var(--primary-variant-color); color: var(--on-surface-color); font-weight: bold; text-transform: uppercase; font-size: 14px; }
+        tbody tr:nth-child(even) { background-color: var(--hover-color); }
+        tbody tr:nth-child(odd) { background-color: var(--surface-color); }
+        tbody tr:hover { background-color: var(--active-color); }
+
+        /* --- Button Styles --- */
+        .speak-btn, .control-btn, .toggle-answers-btn, .read-turkish-btn { background-color: var(--secondary-color); color: var(--background-color); border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background-color 0.2s ease, box-shadow 0.2s ease; margin: 5px 3px 0 3px; font-size: 14px; display: inline-block; vertical-align: middle; }
+        #listenStoryBtn { padding: 6px 12px; }
+        .speak-btn:hover, .control-btn:hover, .toggle-answers-btn:hover, .read-turkish-btn:hover { background-color: #1ceff0; box-shadow: 0 0 8px rgba(3, 218, 198, 0.5); }
+        .speak-btn:active, .control-btn:active, .toggle-answers-btn:active, .read-turkish-btn:active { transform: scale(0.98); }
+        .toggle-answers-btn { margin: 15px auto; display: block; width: fit-content; }
+
+        /* --- Story Styles --- */
+        .story-container { padding: 15px; }
+        .story-title { color: var(--primary-color); text-align: center; margin-bottom: 20px; font-size: 1.5em; font-weight: bold; }
+        .story-paragraph, .turkish-text-paragraph {
+            color: var(--story-text-color);
+            margin-bottom: 15px;
+            text-align: justify;
+            line-height: 1.9;
+            white-space: pre-wrap;
+        }
+        .story-controls, .turkish-text-controls {
+             text-align: center;
+             margin-top: 20px;
+             padding: 10px 5px;
+             background-color: var(--control-background);
+             border-radius: 5px;
+             display: flex;
+             flex-wrap: wrap;
+             justify-content: center;
+             align-items: center;
+             gap: 10px;
+         }
+        .story-controls label { font-size: 14px; margin-right: 3px; }
+        .story-controls input[type="range"] { cursor: pointer; width: 120px; vertical-align: middle; }
+        .story-controls .rate-value { font-size: 14px; min-width: 30px; display: inline-block; text-align: right; color: var(--secondary-color); margin-left: 2px; }
+        .rate-control-group { display: flex; align-items: center; }
+
+        .story-word { transition: color 0.2s ease, background-color 0.2s ease; padding: 0 1px; border-radius: 3px; margin: 0 1px; display: inline-block; position: relative; }
+        .story-word.speakable-desktop { cursor: pointer; }
+        .story-word[data-meaning] { border-bottom: 1px dashed var(--secondary-color); cursor: help; }
+        body:not(.mobile) .story-word[data-meaning]:hover { background-color: var(--active-color); color: var(--secondary-color); }
+        /* Mobil için aktif kelime vurgusu */
+        .story-word.mobile-active-word { background-color: var(--active-color); color: var(--secondary-color); border-bottom: none; }
+
+        /* --- Tooltip Stili --- */
+        #wordTooltip {
+            position: absolute; /* Mobil için dinamik olarak değiştirilebilir */
+            visibility: hidden;
+            opacity: 0;
+            background-color: var(--tooltip-background);
+            color: var(--tooltip-text-color);
+            border: 1px solid var(--tooltip-border-color);
+            padding: 6px 12px; /* Biraz daha büyük */
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1001; /* Diğer elementlerin üzerinde */
+            max-width: 220px;
+            text-align: center;
+            pointer-events: none; /* Üzerine gelince olayları engelle */
+            transition: opacity 0.2s ease-in-out, visibility 0s linear 0.2s;
+            white-space: normal;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); /* Gölge eklendi */
+         }
+        #wordTooltip.visible { visibility: visible; opacity: 1; transition: opacity 0.2s ease-in-out, visibility 0s linear 0s; }
+
+        /* --- Exercise Styles --- */
+        .exercise-container { padding: 15px; }
+        .exercise-title { color: var(--primary-color); text-align: center; margin-bottom: 20px; font-size: 1.3em; font-weight: bold; }
+        .exercise-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+        .exercise-item:last-child { border-bottom: none; }
+        .exercise-question { color: var(--exercise-question-color); font-style: italic; margin-bottom: 5px; }
+        .exercise-answer { color: var(--exercise-answer-color); font-weight: bold; margin-left: 10px; display: none; /* Başlangıçta gizli */ }
+        .exercise-answer .speak-btn { margin-left: 10px; padding: 3px 8px; font-size: 13px; }
+
+        /* --- Mobile Styles --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.6em; }
+            .menu-container { flex-direction: column; gap: 10px; }
+            .menu-section { padding: 8px;}
+            .menu-buttons { gap: 6px; }
+            .menu-btn { padding: 7px 10px; font-size: 13px; }
+            th, td { padding: 8px 10px; font-size: 15px; }
+            th { font-size: 13px; }
+
+            /* Mobile Table Styles */
+            #contentArea table { table-layout: fixed; }
+            #contentArea table thead tr { position: absolute; top: -9999px; left: -9999px; }
+            #contentArea table tr { display: block; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 5px; overflow: hidden; background-color: var(--surface-color); }
+            #contentArea table tbody tr:nth-child(even), #contentArea table tbody tr:nth-child(odd) { background-color: var(--surface-color); }
+            #contentArea table td { display: flex; align-items: center; justify-content: flex-end; border: none; border-bottom: 1px dashed var(--border-color); position: relative; padding-left: 50%; text-align: right; min-height: 40px; word-wrap: break-word; }
+            #contentArea table td:last-child { border-bottom: none; }
+            #contentArea table td:before { content: attr(data-label); position: absolute; top: 0; left: 10px; width: 45%; padding-right: 10px; white-space: nowrap; font-weight: bold; text-align: left; color: var(--primary-color); height: 100%; display: flex; align-items: center; }
+            #contentArea table .speak-btn { padding: 5px 8px; font-size: 13px; }
+            #contentArea table td[data-label^="Seslendir"] { justify-content: flex-end; padding-right: 10px; }
+
+            /* Mobile Story & Exercise Styles */
+            .story-title, .exercise-title { font-size: 1.3em; }
+            .story-paragraph, .turkish-text-paragraph { text-align: left; line-height: 1.8; }
+            .control-btn, .read-turkish-btn { padding: 8px 10px; font-size: 13px; }
+            .story-controls, .turkish-text-controls { flex-direction: row; gap: 8px; justify-content: space-around; }
+            .story-controls input[type="range"] { width: 100px; }
+            .story-word { margin: 0; padding: 0; } /* Mobilde kelimeler arası boşluk azalabilir */
+            #wordTooltip { font-size: 13px; padding: 5px 10px; max-width: 180px; } /* Mobil tooltip biraz daha küçük */
+            .exercise-answer .speak-btn { padding: 4px 8px; font-size: 12px; }
+            .toggle-answers-btn { font-size: 13px; padding: 7px 12px; }
+        }
+        @media (max-width: 480px) {
+             .story-controls, .turkish-text-controls { flex-direction: column; align-items: stretch; }
+             .story-controls > *, .turkish-text-controls > * { width: 90%; margin-left: auto; margin-right: auto; }
+             .rate-control-group { justify-content: center; width: 90%; margin-left: auto; margin-right: auto; }
+             .story-controls input[type="range"] { flex-grow: 1; }
+             .toggle-answers-btn { font-size: 14px; padding: 8px 15px; }
+             .menu-container { gap: 8px; }
+             .menu-section { width: 100%; }
+             #wordTooltip { font-size: 12px; padding: 4px 8px; } /* Çok dar ekranlarda daha da küçük */
+        }
+        /* --- CSS Kodu Bitişi --- */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>İngilizce Öğrenme Aracı</h1>
+        <nav class="menu-container">
+             <!-- Menü Bölümleri (Değişiklik yok) -->
+             <div class="menu-section">
+                <div class="menu-section-title">Kelimeler</div>
+                <div class="menu-buttons">
+                    <button id="showAdjectivesBtn" class="menu-btn active">Sıfatlar</button>
+                    <button id="showVerbs1Btn" class="menu-btn">Fiiller 1</button>
+                    <button id="showVerbs2Btn" class="menu-btn">Fiiller 2</button>
+                    <button id="showIrregularVerbsBtn" class="menu-btn">Düzensiz Fiiller</button>
+                    <button id="showOrdinalsBtn" class="menu-btn">Sıra Sayıları</button>
+                 </div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-section-title">Hikayeler</div>
+                 <div class="menu-buttons">
+                    <button id="showStoryMaryBtn" class="menu-btn">Hikaye: Mary</button>
+                    <button id="showStoryElevatorBtn" class="menu-btn">Hikaye: Elevator</button>
+                 </div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-section-title">Alıştırmalar</div>
+                 <div class="menu-buttons">
+                    <button id="showBeExerciseBtn" class="menu-btn">'Be' Alıştırması</button>
+                    <button id="showTurkishExerciseBtn" class="menu-btn">Türkçe Okuma</button>
+                 </div>
+            </div>
+        </nav>
+        <div id="contentArea">
+             <p class="loading-message">Lütfen bir kategori seçin veya varsayılan liste yükleniyor...</p>
+        </div>
+    </div>
+    <!-- Tooltip Elementi -->
+    <div id="wordTooltip"></div>
+
+    <script>
+        // --- JavaScript Kodu Başlangıcı ---
+
+        // --- Veri Listeleri (Değişiklik yok) ---
+        const adjectives = [ { id: 1, en: 'Tall', pron: 'Tol', tr: 'Uzun' }, { id: 2, en: 'Short', pron: 'Şort', tr: 'Kısa' }, { id: 3, en: 'Fat', pron: 'Fet', tr: 'Şişman' }, { id: 4, en: 'Thin', pron: 'Tin', tr: 'Zayıf/İnce (kişi)' }, { id: 5, en: 'Big', pron: 'Big', tr: 'Büyük' }, { id: 6, en: 'Small', pron: 'Simol', tr: 'Küçük' }, { id: 7, en: 'Wide', pron: 'Vayd', tr: 'Geniş' }, { id: 8, en: 'Narrow', pron: 'Nerov', tr: 'Dar' }, { id: 9, en: 'Cheap', pron: 'Çip', tr: 'Ucuz' }, { id: 10, en: 'Expensive', pron: 'İkspensiv', tr: 'Pahalı' }, { id: 11, en: 'Careful', pron: 'Kerful', tr: 'Dikkatli' }, { id: 12, en: 'Hot', pron: 'Hat', tr: 'Sıcak' }, { id: 13, en: 'Cold', pron: 'Kold', tr: 'Soğuk' }, { id: 14, en: 'Warm', pron: 'Vorm', tr: 'Ilık' }, { id: 15, en: 'Cool', pron: 'Kuul', tr: 'Serin' }, { id: 16, en: 'Fast', pron: 'Fest', tr: 'Hızlı' }, { id: 17, en: 'Slow', pron: 'Slov', tr: 'Yavaş' }, { id: 18, en: 'Clean', pron: 'Klin', tr: 'Temiz' }, { id: 19, en: 'Dirty', pron: 'Dörti', tr: 'Kirli' }, { id: 20, en: 'Heavy', pron: 'Hevi', tr: 'Ağır' }, { id: 21, en: 'Light', pron: 'Layt', tr: 'Hafif/Açık (renk)' }, { id: 22, en: 'Easy', pron: 'İzi', tr: 'Kolay' }, { id: 23, en: 'Hard', pron: 'Hard', tr: 'Zor/Sert' }, { id: 24, en: 'Nice', pron: 'Nays', tr: 'Güzel/Hoş' }, { id: 25, en: 'Ugly', pron: 'Agli', tr: 'Çirkin' }, { id: 26, en: 'Old', pron: 'Old', tr: 'Eski/Yaşlı' }, { id: 27, en: 'Young', pron: 'Yang', tr: 'Genç' }, { id: 28, en: 'New', pron: 'Nyu', tr: 'Yeni' }, { id: 29, en: 'Thick', pron: 'Tik', tr: 'Kalın (nesne)' }, { id: 30, en: 'Large', pron: 'Larç', tr: 'Büyük/Geniş' }, { id: 31, en: 'Long', pron: 'Long', tr: 'Uzun' }, { id: 32, en: 'High', pron: 'Hay', tr: 'Yüksek' }, { id: 33, en: 'Low', pron: 'Lov', tr: 'Alçak' }, { id: 34, en: 'Rich', pron: 'Riç', tr: 'Zengin' }, { id: 35, en: 'Poor', pron: 'Pur', tr: 'Fakir' }, { id: 36, en: 'Good', pron: 'Gud', tr: 'İyi' }, { id: 37, en: 'Bad', pron: 'Bed', tr: 'Kötü' }, { id: 38, en: 'Interesting', pron: 'İntresting', tr: 'İlginç' }, { id: 39, en: 'Hungry', pron: 'Hangri', tr: 'Aç' }, { id: 40, en: 'Busy', pron: 'Bizi', tr: 'Meşgul' }, { id: 41, en: 'Boring', pron: 'Boring', tr: 'Sıkıcı' }, { id: 42, en: 'Happy', pron: 'Hepi', tr: 'Mutlu' }, { id: 43, en: 'Full', pron: 'Ful', tr: 'Tam/Dolu' }, { id: 44, en: 'Empty', pron: 'Empti', tr: 'Boş' }, { id: 45, en: 'Dark', pron: 'Dark', tr: 'Koyu (renk)/Karanlık' }, { id: 46, en: 'Fair', pron: 'Feır', tr: 'Açık (renk)/Adil' }, { id: 47, en: 'Weak', pron: 'Viik', tr: 'Zayıf/Güçsüz' }, { id: 48, en: 'Slim', pron: 'Slim', tr: 'İnce/Zarif' }, { id: 49, en: 'Pretty', pron: 'Priti', tr: 'Güzel/Sevimli' }, { id: 50, en: 'Handsome', pron: 'Hendsım', tr: 'Yakışıklı' }, { id: 51, en: 'Beautiful', pron: 'Biyutiful', tr: 'Güzel' }, { id: 52, en: 'Alive', pron: 'Elayv', tr: 'Canlı/Hayatta' }, { id: 53, en: 'Clumsy', pron: 'Klamzi', tr: 'Sakar/Beceriksiz' }, ];
+        const verbs1 = [ { id: 1, en: 'Answer', pron: 'Ensır', tr: 'Cevap vermek' }, { id: 2, en: 'Break', pron: 'Breyk', tr: 'Kırmak' }, { id: 3, en: 'Buy', pron: 'Bay', tr: 'Satın almak' }, { id: 4, en: 'Carry', pron: 'Keri', tr: 'Taşımak' }, { id: 5, en: 'Catch', pron: 'Keç', tr: 'Yakalamak/Yetişmek' }, { id: 6, en: 'Check', pron: 'Çek', tr: 'Kontrol etmek' }, { id: 7, en: 'Clean', pron: 'Klin', tr: 'Temizlemek' }, { id: 8, en: 'Come', pron: 'Kam', tr: 'Gelmek' }, { id: 9, en: 'Do', pron: 'Du', tr: 'Yapmak' }, { id: 10, en: 'Drink', pron: 'Drink', tr: 'İçmek' }, { id: 11, en: 'Eat', pron: 'İit', tr: 'Yemek yemek' }, { id: 12, en: 'Forget', pron: 'Forget', tr: 'Unutmak' }, { id: 13, en: 'Give', pron: 'Giv', tr: 'Vermek' }, { id: 14, en: 'Go', pron: 'Go', tr: 'Gitmek' }, { id: 15, en: 'Have', pron: 'Hev', tr: 'Sahip olmak' }, { id: 16, en: 'Hear', pron: 'Hiır', tr: 'Duymak' }, { id: 17, en: 'Know', pron: 'Nov', tr: 'Bilmek/Tanımak' }, { id: 18, en: 'Learn', pron: 'Lörn', tr: 'Öğrenmek' }, { id: 19, en: 'Leave', pron: 'Liiv', tr: 'Ayrılmak/Terk etmek' }, { id: 20, en: 'Lift', pron: 'Lift', tr: 'Kaldırmak' }, { id: 21, en: 'Listen to', pron: 'Lisın tu', tr: 'Dinlemek' }, { id: 22, en: 'Lose', pron: 'Luuz', tr: 'Kaybetmek' }, { id: 23, en: 'Meet', pron: 'Miit', tr: 'Buluşmak/Tanışmak/Karşılamak' }, { id: 24, en: 'Need', pron: 'Niid', tr: 'İhtiyacı olmak' }, { id: 25, en: 'Open', pron: 'Opın', tr: 'Açmak' }, { id: 26, en: 'Play', pron: 'Pley', tr: 'Oynamak/Çalmak (müzik aleti)' }, { id: 27, en: 'Read', pron: 'Riid', tr: 'Okumak' }, { id: 28, en: 'Remember', pron: 'Rimembır', tr: 'Hatırlamak' }, { id: 29, en: 'Say', pron: 'Sey', tr: 'Söylemek/Demek' }, { id: 30, en: 'See', pron: 'Sii', tr: 'Görmek/Anlamak' }, { id: 31, en: 'Send', pron: 'Send', tr: 'Göndermek' }, { id: 32, en: 'Show', pron: 'Şov', tr: 'Göstermek' }, { id: 33, en: 'Sleep', pron: 'Sliip', tr: 'Uyumak' }, { id: 34, en: 'Speak', pron: 'Spiik', tr: 'Konuşmak' }, { id: 35, en: 'Spend', pron: 'Spend', tr: 'Harcamak (para/zaman)' }, { id: 36, en: 'Study', pron: 'Stadi', tr: 'Ders çalışmak/İncelemek' }, { id: 37, en: 'Swim', pron: 'Svim', tr: 'Yüzmek' }, { id: 38, en: 'Take', pron: 'Teyk', tr: 'Almak/Götürmek' }, { id: 39, en: 'Teach', pron: 'Tiiç', tr: 'Öğretmek' }, { id: 40, en: 'Tell', pron: 'Tel', tr: 'Anlatmak/Söylemek' }, { id: 41, en: 'Use', pron: 'Yuuz', tr: 'Kullanmak' }, { id: 42, en: 'Visit', pron: 'Vizit', tr: 'Ziyaret etmek' }, { id: 43, en: 'Wake', pron: 'Weyk', tr: 'Uyanmak/Uyandırmak' }, { id: 44, en: 'Walk', pron: 'Volk', tr: 'Yürümek' }, { id: 45, en: 'Wash', pron: 'Voş', tr: 'Yıkamak' }, { id: 46, en: 'Watch', pron: 'Voç', tr: 'İzlemek/Seyretmek/Nöbet tutmak' }, { id: 47, en: 'Wear', pron: 'Veır', tr: 'Giymek/Takmak' }, { id: 48, en: 'Work', pron: 'Vörk', tr: 'Çalışmak/İşe yaramak' }, { id: 49, en: 'Write', pron: 'Rayt', tr: 'Yazmak' }];
+        const verbs2 = [ { id: 50, en: 'Accept', pron: 'Accept', tr: 'kabul etmek' }, { id: 51, en: 'Allow', pron: 'Allow', tr: 'izin vermek' }, { id: 52, en: 'Ask', pron: 'Ask', tr: 'sormak' }, { id: 53, en: 'Believe', pron: 'Believe', tr: 'inanmak' }, { id: 54, en: 'Borrow', pron: 'Borrow', tr: 'ödünç almak' }, { id: 55, en: 'Bring', pron: 'Bring', tr: 'getirmek' }, { id: 56, en: 'Can', pron: 'Can', tr: '-ebilmek' }, { id: 57, en: 'Cancel', pron: 'Cancel', tr: 'iptal etmek' }, { id: 58, en: 'Change', pron: 'Change', tr: 'değiştirmek' }, { id: 59, en: 'Comb', pron: 'Comb', tr: 'taramak' }, { id: 60, en: 'Complain', pron: 'Complain', tr: 'şikayet etmek' }, { id: 61, en: 'Cough', pron: 'Cough', tr: 'öksürmek' }, { id: 62, en: 'Count', pron: 'Count', tr: 'saymak' }, { id: 63, en: 'Cut', pron: 'Cut', tr: 'kesmek' }, { id: 64, en: 'Dance', pron: 'Dance', tr: 'dans etmek' }, { id: 65, en: 'Draw', pron: 'Draw', tr: 'çizmek' }, { id: 66, en: 'Drive', pron: 'Drive', tr: 'sürmek' }, { id: 67, en: 'Explain', pron: 'Explain', tr: 'açıklamak' }, { id: 68, en: 'Fall', pron: 'Fall', tr: 'düşmek' }, { id: 69, en: 'Fill', pron: 'Fill', tr: 'doldurmak' }, { id: 70, en: 'Find', pron: 'Find', tr: 'bulmak' }, { id: 71, en: 'Finish', pron: 'Finish', tr: 'bitirmek' }, { id: 72, en: 'Fit', pron: 'Fit', tr: 'uymak, uygun olmak' }, { id: 73, en: 'Fix', pron: 'Fix', tr: 'sabitleştirmek, onarmak' }, { id: 74, en: 'Fly', pron: 'Fly', tr: 'uçmak' }, { id: 75, en: 'Hurt', pron: 'Hurt', tr: 'incitmek, incinmek' }, { id: 76, en: 'Live', pron: 'Live', tr: 'yaşamak' }, { id: 77, en: 'Look', pron: 'Look', tr: 'bakmak' }, { id: 78, en: 'Make', pron: 'Make', tr: 'yapmak' }, { id: 79, en: 'Organise', pron: 'Organise', tr: 'düzenlemek, kurmak' }, { id: 80, en: 'Pay', pron: 'Pay', tr: 'ödemek' }, { id: 81, en: 'Put', pron: 'Put', tr: 'koymak' }, { id: 82, en: 'Rain', pron: 'Rain', tr: 'yağmak' }, { id: 83, en: 'Reply', pron: 'Reply', tr: 'cevap vermek' }, { id: 84, en: 'Run', pron: 'Run', tr: 'koşmak' }, { id: 85, en: 'Sell', pron: 'Sell', tr: 'satmak' }, { id: 86, en: 'Sign', pron: 'Sign', tr: 'imzalamak' }, { id: 87, en: 'Sing', pron: 'Sing', tr: '[şarkı] söylemek, [kuş] ötmek' }, { id: 88, en: 'Sit', pron: 'Sit', tr: 'oturmak' }, { id: 89, en: 'Smoke', pron: 'Smoke', tr: 'sigara içmek' }, { id: 90, en: 'Spell', pron: 'Spell', tr: 'harf harf söylemek' }, { id: 91, en: 'Stand', pron: 'Stand', tr: 'beklemek [ayakta durmak]' }, { id: 92, en: 'Start', pron: 'Start', tr: 'başlamak' }, { id: 93, en: 'Succeed', pron: 'Succeed', tr: 'başarmak' }, { id: 94, en: 'Talk', pron: 'Talk', tr: 'konuşmak' }, { id: 95, en: 'Think', pron: 'Think', tr: 'düşünmek' }, { id: 96, en: 'Translate', pron: 'Translate', tr: 'tercüme etmek, çevirmek' }, { id: 97, en: 'Travel', pron: 'Travel', tr: 'seyahat etmek, yolculuk yapmak' }, { id: 98, en: 'Try', pron: 'Try', tr: 'denemek' }, { id: 99, en: 'Turnoff', pron: 'Turnoff', tr: '[tv, ışık] kapamak' }, { id: 100, en: 'Turnon', pron: 'Turnon', tr: 'açmak [tv, ışık]' }, { id: 101, en: 'Type', pron: 'Type', tr: 'daktilo veya klavye ile yazmak' }, { id: 102, en: 'Understand', pron: 'Understand', tr: 'anlamak' }, { id: 103, en: 'Wait', pron: 'Wait', tr: 'beklemek' }, { id: 104, en: 'Want', pron: 'Want', tr: 'istemek' }, { id: 105, en: 'Worry', pron: 'Worry', tr: 'kaygılanmak' }, { id: 106, en: 'Close', pron: 'Close', tr: 'kapamak' }];
+        const ordinalNumbers = [ { num: '1st', text: 'First' }, { num: '2nd', text: 'Second' }, { num: '3rd', text: 'Third' }, { num: '4th', text: 'Fourth' }, { num: '5th', text: 'Fifth' }, { num: '6th', text: 'Sixth' }, { num: '7th', text: 'Seventh' }, { num: '8th', text: 'Eighth' }, { num: '9th', text: 'Ninth' }, { num: '10th', text: 'Tenth' }, { num: '11th', text: 'Eleventh' }, { num: '12th', text: 'Twelfth' }, { num: '13th', text: 'Thirteenth' }, { num: '14th', text: 'Fourteenth' }, { num: '15th', text: 'Fifteenth' }, { num: '16th', text: 'Sixteenth' }, { num: '17th', text: 'Seventeenth' }, { num: '18th', text: 'Eighteenth' }, { num: '19th', text: 'Nineteenth' }, { num: '20th', text: 'Twentieth' }, { num: '21st', text: 'Twenty-first' }, { num: '22nd', text: 'Twenty-second' }, { num: '23rd', text: 'Twenty-third' }, { num: '24th', text: 'Twenty-fourth' }, { num: '25th', text: 'Twenty-fifth' }, { num: '26th', text: 'Twenty-sixth' }, { num: '27th', text: 'Twenty-seventh' }, { num: '28th', text: 'Twenty-eighth' }, { num: '29th', text: 'Twenty-ninth' }, { num: '30th', text: 'Thirtieth' }, { num: '31st', text: 'Thirty-first' }, { num: '40th', text: 'Fortieth' }, { num: '50th', text: 'Fiftieth' }, { num: '60th', text: 'Sixtieth' }, { num: '70th', text: 'Seventieth' }, { num: '80th', text: 'Eightieth' }, { num: '90th', text: 'Ninetieth' }, { num: '100th', text: 'One hundredth' }, { num: '1,000th', text: 'One thousandth' }, { num: '1,000,000th', text: 'One millionth' } ];
+        const irregularVerbs = [ { id: 1, v1: 'BE (AM-IS-ARE)', pronV1: 'Bi (Em-İz-Ar)', v2: 'WAS - WERE', tr: 'OLMAK' }, { id: 2, v1: 'BREAK', pronV1: 'Bıreyk', v2: 'BROKE', tr: 'KIRMAK' }, { id: 3, v1: 'BRING', pronV1: 'Bring', v2: 'BROUGHT', tr: 'GETİRMEK' }, { id: 4, v1: 'BUY', pronV1: 'Bay', v2: 'BOUGHT', tr: 'SATIN ALMAK' }, { id: 5, v1: 'CATCH', pronV1: 'Keç', v2: 'CAUGHT', tr: 'YAKALAMAK' }, { id: 6, v1: 'COME', pronV1: 'Kam', v2: 'CAME', tr: 'GELMEK' }, { id: 7, v1: 'DO', pronV1: 'Du', v2: 'DID', tr: 'YAPMAK' }, { id: 8, v1: 'DRINK', pronV1: 'Drink', v2: 'DRANK', tr: 'İÇMEK' }, { id: 9, v1: 'EAT', pronV1: 'İit', v2: 'ATE', tr: 'YEMEK' }, { id: 10, v1: 'FEEL', pronV1: 'Fiil', v2: 'FELT', tr: 'HİSSETMEK' }, { id: 11, v1: 'FIND', pronV1: 'Faynd', v2: 'FOUND', tr: 'BULMAK' }, { id: 12, v1: 'FORGET', pronV1: 'Figet', v2: 'FORGOT', tr: 'UNUTMAK' }, { id: 13, v1: 'GET', pronV1: 'Get', v2: 'GOT', tr: 'ALMAK' }, { id: 14, v1: 'GIVE', pronV1: 'Giv', v2: 'GAVE', tr: 'VERMEK' }, { id: 15, v1: 'GO', pronV1: 'Go', v2: 'WENT', tr: 'GİTMEK' }, { id: 16, v1: 'HAVE', pronV1: 'Hev', v2: 'HAD', tr: 'VAR/SAHİP OLMAK' }, { id: 17, v1: 'HEAR', pronV1: 'Hiır', v2: 'HEARD', tr: 'DUYMAK' }, { id: 18, v1: 'KNOW', pronV1: 'Nov', v2: 'KNEW', tr: 'TANIMAK BİLMEK' }, { id: 19, v1: 'LEAVE', pronV1: 'Liiv', v2: 'LEFT', tr: 'AYRILMAK TERKETMEK' }, { id: 20, v1: 'LOSE', pronV1: 'Luuz', v2: 'LOST', tr: 'KAYBETMEK' }, { id: 21, v1: 'MAKE', pronV1: 'Meyk', v2: 'MADE', tr: 'YAPMAK' }, { id: 22, v1: 'MEET', pronV1: 'Miit', v2: 'MET', tr: 'BULUŞMAK KARŞILAŞMAK' }, { id: 23, v1: 'READ', pronV1: 'Riid', v2: 'READ', tr: 'OKUMAK' }, { id: 24, v1: 'RUN', pronV1: 'Ran', v2: 'RAN', tr: 'KOŞMAK' }, { id: 25, v1: 'SEE', pronV1: 'Sii', v2: 'SAW', tr: 'GÖRMEK' }, { id: 26, v1: 'SLEEP', pronV1: 'Siliip', v2: 'SLEPT', tr: 'UYUMAK' }, { id: 27, v1: 'SPEAK', pronV1: 'Sipiik', v2: 'SPOKE', tr: 'KONUŞMAK' }, { id: 28, v1: 'SWIM', pronV1: 'Swim', v2: 'SWAM', tr: 'YÜZMEK' }, { id: 29, v1: 'TAKE', pronV1: 'Teyk', v2: 'TOOK', tr: 'ALMAK' }, { id: 30, v1: 'TEACH', pronV1: 'Tiiç', v2: 'TAUGHT', tr: 'ÖĞRETMEK' }, { id: 31, v1: 'WAKE', pronV1: 'Weyk', v2: 'WOKE', tr: 'UYAN(DIR)MAK' }, { id: 32, v1: 'WEAR', pronV1: 'Viir', v2: 'WORE', tr: 'GİY(İN)MEK' }, { id: 33, v1: 'WRITE', pronV1: 'Rayt', v2: 'WROTE', tr: 'YAZMAK' } ];
+        const beExercise = [ { id: 1, question: "(he / be / French)", answer: "He's French." }, { id: 2, question: "(we / not / be / cold)", answer: "We aren't cold." }, { id: 3, question: "(he / be / a footballer?)", answer: "Is he a footballer?" }, { id: 4, question: "(where / be / John?)", answer: "Where's John?" }, { id: 5, question: "(we / be / German)", answer: "We're German." }, { id: 6, question: "(he / not / be / a journalist)", answer: "He isn't a journalist." }, { id: 7, question: "(we / not / be / singers)", answer: "We aren't singers." }, { id: 8, question: "(you / be / a nurse?)", answer: "Are you a nurse?" }, { id: 9, question: "(they / be / from Libya)", answer: "They're from Libya." }, { id: 10, question: "(where / be / David?)", answer: "Where's David?" }, { id: 11, question: "(how / be / your mother?)", answer: "How's your mother?" }, { id: 12, question: "(we / be / thirsty)", answer: "We're thirsty." }, { id: 13, question: "(how long / be / the film?)", answer: "How long's the film?" }, { id: 14, question: "(how often / be / you in London?)", answer: "How often are you in London?" }, { id: 15, question: "(he / be / handsome)", answer: "He's handsome." }, { id: 16, question: "(I / not / be / English)", answer: "I'm not English." }, { id: 17, question: "(you / not / be / a doctor)", answer: "You aren't a doctor." }, { id: 18, question: "(she / not / be / Italian)", answer: "She isn't Italian." }, { id: 19, question: "(he / be / my brother)", answer: "He's my brother." }, { id: 20, question: "(you / not / be / Egyptian)", answer: "You aren't Egyptian." } ];
+        const turkishTextExercise = {
+            title: "Tom'un Günü",
+            text: "MERHABA BENİM ADIM TOM. 15 YAŞINDAYIM. ÖĞRENCİYİM VE İKİ KARDEŞİM VAR. BEN LONDON DA YAŞIYORUM AİLEMLE. HERGÜN ERKEN KALKARIM KAHVALTI YAPARIM VE OKULA GİDERİM SAAT 9.00 DA. HAFTA SONLARI ERKEN KALKMAM VE OKULA GİTMEM. SEN OKULA GİDERMİSİN?\n\nBEN BUGÜN HASTAYIM VE EVDEYİM. FAKAT KARDEŞİM ÖĞRENCİ DEĞİL VE O OKULA GİTMEZ. ÇÜNKÜ 5 YAŞINDA. O ŞİMDİ MUTFAKTA. AMA HASTA DEĞİL SEN HASTAMISIN? BEN MÜZİK DİNLERİM FAKAT KARDEŞİM DİNLEMEZ O UYUR."
+        };
+        const storyMaryTitle = "Mary Walks Home";
+        const storyMaryTextHtml = ` Mary works at a bank. She begins working at eight o'clock in the morning. She stops working at five o'clock in the afternoon. <br><br> At five o'clock the bank closes. Everybody goes home. Some people drive home. Some people take the train. Some people take the bus. <br><br> Mary walks home. She likes to walk. She walks, and walks, and walks, and walks. Mary lives eight miles from the bank. She walks for three hours. <br><br> At eight o'clock in the evening, Mary is home. She eats dinner. At ten o'clock she goes to bed. Mary is tired. <br><br> She is 82 years old. `;
+        const storyMaryTextSpeech = storyMaryTextHtml.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, "");
+        const storyElevatorTitle = "Elevator Romance";
+        const storyElevatorTextHtml = ` A young man gets on an elevator. The elevator goes up. The elevator stops. A young woman gets on the elevator. The elevator goes up. Then it stops. <br><br> It doesn't go up. It doesn't go down. It is stuck between floors. <br><br> The elevator is stuck for 19 hours. The man and the woman are in the elevator. They are together for 19 hours. They talk, and talk, and talk. <br><br> Finally, the elevator goes up. It stops, and the doors open. The man and the woman walk out of the elevator. <br><br> They are tired. They are hungry. They are thirsty. They are in love. Three months later, they get married. `;
+        const storyElevatorTextSpeech = storyElevatorTextHtml.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, "");
+
+        // --- Sözlük Oluşturma (Değişiklik yok) ---
+        const wordDictionary = {};
+        [...adjectives, ...verbs1, ...verbs2].forEach(item => { if (item.en && item.tr) { wordDictionary[item.en.toLowerCase()] = item.tr; } });
+        Object.assign(wordDictionary, { 'bank': 'banka', 'begins': 'başlar', 'working': 'çalışma, çalışıyor', 'eight': 'sekiz', "o'clock": 'saat', 'morning': 'sabah', 'stops': 'durur, durdurur', 'five': 'beş', 'afternoon': 'öğleden sonra', 'closes': 'kapanır', 'everybody': 'herkes', 'drive': 'araba sürmek', 'train': 'tren', 'bus': 'otobüs', 'walks': 'yürür', 'likes': 'sever, hoşlanır', 'miles': 'mil', 'three': 'üç', 'hours': 'saat(ler)', 'evening': 'akşam', 'eats': 'yer', 'dinner': 'akşam yemeği', 'ten': 'on', 'bed': 'yatak', 'tired': 'yorgun', 'years': 'yıl(lar)', /*'old': 'yaşlı, eski',*/ 'man': 'adam', 'gets': 'alır, biner', 'on': 'üstünde, -e (binmek)', 'elevator': 'asansör', 'up': 'yukarı', 'woman': 'kadın', 'down': 'aşağı', 'stuck': 'sıkışmış, takılmış', 'between': 'arasında', 'floors': 'katlar', 'nineteen': 'on dokuz', '19': 'on dokuz', 'together': 'birlikte', 'talk': 'konuşmak', 'doors': 'kapılar', 'open': 'açık, açmak', 'out': 'dışarı', 'of': '-den (dışarı)', /*'thirsty': 'susamış',*/ 'love': 'aşk, sevgi', 'months': 'ay(lar)', 'later': 'daha sonra', 'married': 'evli', 'eighty-two': 'seksen iki', '82': 'seksen iki', 'finally': 'sonunda', 'a': 'bir', 'the': '(belirli tanım edatı)', 'and': 've', 'some': 'bazı, biraz', 'for': 'için', 'it': 'o (cansız/hayvan)', 'in': 'içinde', 'at': '-de, -da', 'is': 'olmak (3.tekil şahıs)', 'are': 'olmak (çoğul)', 'they': 'onlar', 'she': 'o (kadın)', 'he': 'o (erkek)', 'to': '-e, -a (yönelme)', 'from': '-den, -dan', 'an': 'bir (sesli harf öncesi)', "doesn't": '-mez, -maz', 'be': 'olmak', 'french': 'Fransız', /*'we': 'biz',*/ 'not': 'değil', /*'cold': 'soğuk',*/ 'footballer': 'futbolcu', 'where': 'nerede', 'german': 'Alman', 'journalist': 'gazeteci', 'singers': 'şarkıcılar', 'you': 'sen, siz', 'nurse': 'hemşire', 'libya': 'Libya', 'how': 'nasıl', 'your': 'senin, sizin', 'mother': 'anne', /*'long': 'uzun, ne kadar süre',*/ 'film': 'film', 'often': 'sık sık', 'london': 'Londra', /*'handsome': 'yakışıklı',*/ 'I': 'ben', 'english': 'İngiliz', 'doctor': 'doktor', 'italian': 'İtalyan', 'my': 'benim', 'brother': 'erkek kardeş', 'egyptian': 'Mısırlı', "he's": "o ...dır (erkek/kısa)", "we're": "biz ...iz (kısa)", "aren't": "değil (çoğul/kısa)", "isn't": "değil (tekil/kısa)", "where's": "nerede (kısa)", "they're": "onlar ...dır (kısa)", "how's": "nasıl (kısa)", "long's": "ne kadar uzun (kısa)", "i'm": "ben ...im (kısa)", 'we': 'biz', 'thirsty': 'susamış' });
+        irregularVerbs.forEach(verb => { const baseVerb = verb.v1.split('(')[0].trim().toLowerCase(); if (baseVerb && !wordDictionary[baseVerb]) { wordDictionary[baseVerb] = verb.tr; } });
+
+
+        // --- Mobil Tespiti ---
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+        if(isMobile) document.body.classList.add('mobile');
+
+        // --- DOM Elementleri (Değişiklik yok) ---
+        const contentArea = document.getElementById('contentArea');
+        const showAdjectivesBtn = document.getElementById('showAdjectivesBtn');
+        const showVerbs1Btn = document.getElementById('showVerbs1Btn');
+        const showVerbs2Btn = document.getElementById('showVerbs2Btn');
+        const showIrregularVerbsBtn = document.getElementById('showIrregularVerbsBtn');
+        const showOrdinalsBtn = document.getElementById('showOrdinalsBtn');
+        const showStoryMaryBtn = document.getElementById('showStoryMaryBtn');
+        const showStoryElevatorBtn = document.getElementById('showStoryElevatorBtn');
+        const showBeExerciseBtn = document.getElementById('showBeExerciseBtn');
+        const showTurkishExerciseBtn = document.getElementById('showTurkishExerciseBtn');
+        const menuButtons = document.querySelectorAll('.menu-btn');
+        const wordTooltip = document.getElementById('wordTooltip');
+
+        // --- Global Değişkenler (Değişiklik yok) ---
+        let currentStoryUtterance = null;
+        let isStoryPaused = false;
+        let currentPlaybackRate = 0.9;
+        let activeTooltipWordElement = null; // Tooltip'in gösterildiği kelime elementi (mobil için)
+        let speechQueue = [];
+        let isSpeakingQueue = false;
+
+        // --- Başlıklar (Değişiklik yok) ---
+        const wordTableHeaders = ['#', 'Türkçesi', 'İngilizcesi', 'Okunuşu', 'Seslendir'];
+        const ordinalTableHeaders = ['Sayı', 'Yazılışı', 'Seslendir'];
+        const irregularVerbTableHeaders = ['Sıra', 'Türkçe', 'Present (V1)', 'Past (V2)', 'Seslendir (V1+V2)'];
+        const beExerciseHeaders = ['Soru', 'Cevap', 'Seslendir'];
+
+        // --- Fonksiyonlar ---
+
+        // Tek Kelime/Cümle Seslendirme (Değişiklik yok)
+        function speakContent(content, lang = 'en-US', onEndCallback = null) {
+            if (!content) { if (onEndCallback) onEndCallback(); return; }
+            const textToSpeak = content.split('(')[0].trim();
+            if (!textToSpeak) { if (onEndCallback) onEndCallback(); return; }
+
+            if ('speechSynthesis' in window) {
+                try {
+                    // Kuyruk dışı veya yeni tek konuşma ise önceki konuşmayı iptal et
+                    if (speechSynthesis.speaking && (!isSpeakingQueue || speechQueue.length === 0)) {
+                        speechSynthesis.cancel();
+                    }
+
+                    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                    utterance.lang = lang;
+                    utterance.rate = (lang === 'tr-TR') ? 1.0 : currentPlaybackRate; // Hız ayarı buradan da etkilenebilir
+                    utterance.pitch = 1;
+                    utterance.onend = () => { if (onEndCallback) { onEndCallback(); } };
+                    utterance.onerror = (event) => { console.error(`SpeechSynthesis Hata: ${event.error}`, textToSpeak); if (onEndCallback) onEndCallback(); };
+                    speechSynthesis.speak(utterance);
+                } catch (error) {
+                    console.error("SpeechSynthesis API hatası (speakContent):", error); if (onEndCallback) onEndCallback();
+                }
+            } else {
+                console.warn("Tarayıcınız seslendirme özelliğini desteklemiyor."); if (onEndCallback) onEndCallback();
+            }
+        }
+
+        // Kuyruk İşleyici (Değişiklik yok)
+        function processSpeechQueue() {
+            if (isSpeakingQueue || speechQueue.length === 0) { isSpeakingQueue = false; return; }
+            isSpeakingQueue = true;
+            const { text, lang } = speechQueue.shift();
+            speakContent(text, lang, () => { isSpeakingQueue = false; setTimeout(processSpeechQueue, 100); });
+        }
+
+        // Fiil Seslendirme (Değişiklik yok)
+        function speakVerbForms(v1Text, v2Text) {
+             if (isSpeakingQueue || speechSynthesis.speaking) { speechSynthesis.cancel(); }
+             speechQueue = [];
+             isSpeakingQueue = false;
+             const cleanedV1 = v1Text.split('(')[0].trim();
+             const cleanedV2 = v2Text.split('-')[0].trim();
+             if (cleanedV1) speechQueue.push({ text: cleanedV1, lang: 'en-US' });
+             if (cleanedV2 && cleanedV2 !== cleanedV1 && !/read/i.test(cleanedV1)) {
+                 speechQueue.push({ text: cleanedV2, lang: 'en-US' });
+             } else if (cleanedV2 && cleanedV2 !== cleanedV1){
+                 speechQueue.push({ text: cleanedV2, lang: 'en-US' });
+             }
+             if (speechQueue.length > 0) processSpeechQueue();
+        }
+
+        // Hikaye Seslendirme (Değişiklik yok)
+        function playStoryAudio(text, rate) {
+             if ('speechSynthesis' in window && text) {
+                 try {
+                     hideTooltip();
+                     if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); }
+                     speechQueue = []; isSpeakingQueue = false; isStoryPaused = false;
+
+                     currentStoryUtterance = new SpeechSynthesisUtterance(text);
+                     currentStoryUtterance.lang = 'en-US';
+                     currentStoryUtterance.rate = rate;
+                     currentStoryUtterance.pitch = 1;
+                     const pauseBtn = document.getElementById('pauseResumeStoryBtn');
+                     const stopBtn = document.getElementById('stopStoryBtn');
+
+                     currentStoryUtterance.onstart = () => {
+                         if (pauseBtn) { pauseBtn.textContent = 'Durdur'; pauseBtn.disabled = false; }
+                         if (stopBtn) stopBtn.disabled = false;
+                         isStoryPaused = false;
+                     };
+                     currentStoryUtterance.onpause = () => {
+                         isStoryPaused = true;
+                         if (pauseBtn) pauseBtn.textContent = 'Devam Et';
+                     };
+                     currentStoryUtterance.onresume = () => {
+                         isStoryPaused = false;
+                         if (pauseBtn) pauseBtn.textContent = 'Durdur';
+                     };
+                     currentStoryUtterance.onend = () => {
+                         if (pauseBtn) { pauseBtn.textContent = 'Durdur'; pauseBtn.disabled = true; }
+                         if (stopBtn) stopBtn.disabled = true;
+                         isStoryPaused = false;
+                         currentStoryUtterance = null;
+                     };
+                     currentStoryUtterance.onerror = (event) => {
+                         console.error(`SpeechSynthesis Hata (Hikaye): ${event.error}`);
+                         if (pauseBtn) { pauseBtn.textContent = 'Durdur'; pauseBtn.disabled = true; }
+                         if (stopBtn) stopBtn.disabled = true;
+                         isStoryPaused = false;
+                         currentStoryUtterance = null;
+                         alert("Hikaye seslendirilirken bir hata oluştu: " + event.error);
+                     };
+                     speechSynthesis.speak(currentStoryUtterance);
+                 } catch (error) { console.error("SpeechSynthesis API hatası (playStoryAudio):", error); }
+             } else if (!text) {
+                 alert("Seslendirilecek hikaye metni bulunamadı.");
+             } else {
+                  console.warn("Tarayıcınız seslendirme özelliğini desteklemiyor.");
+             }
+         }
+
+        // Liste Tablosu Oluşturma (Değişiklik yok)
+        function createListTable(data, headers) {
+             contentArea.innerHTML = '';
+             if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+             hideTooltip();
+             data.sort((a, b) => a.id - b.id);
+             const table = document.createElement('table');
+             const thead = document.createElement('thead'); const tbody = document.createElement('tbody'); const headerRow = document.createElement('tr'); headers.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRow.appendChild(th); }); thead.appendChild(headerRow); table.appendChild(thead);
+             data.forEach(item => { const row = document.createElement('tr'); const cellId = document.createElement('td'); cellId.textContent = item.id; cellId.setAttribute('data-label', headers[0]); row.appendChild(cellId); const cellTr = document.createElement('td'); cellTr.textContent = item.tr; cellTr.setAttribute('data-label', headers[1]); row.appendChild(cellTr); const cellEn = document.createElement('td'); cellEn.textContent = item.en; cellEn.setAttribute('data-label', headers[2]); row.appendChild(cellEn); const cellPron = document.createElement('td'); cellPron.textContent = item.pron; cellPron.setAttribute('data-label', headers[3]); row.appendChild(cellPron); const cellSpeak = document.createElement('td'); cellSpeak.setAttribute('data-label', headers[4]); const speakButton = document.createElement('button'); speakButton.textContent = 'Seslendir'; speakButton.classList.add('speak-btn'); speakButton.onclick = () => speakContent(item.en); cellSpeak.appendChild(speakButton); row.appendChild(cellSpeak); tbody.appendChild(row); }); table.appendChild(tbody);
+             contentArea.appendChild(table);
+         }
+
+        // Sıra Sayıları Tablosu (Değişiklik yok)
+        function createOrdinalTable(data, headers) {
+            contentArea.innerHTML = '';
+            if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+            hideTooltip();
+            const table = document.createElement('table');
+            const thead = document.createElement('thead'); const tbody = document.createElement('tbody'); const headerRow = document.createElement('tr'); headers.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRow.appendChild(th); }); thead.appendChild(headerRow); table.appendChild(thead);
+            data.forEach(item => { const row = document.createElement('tr'); const cellNum = document.createElement('td'); cellNum.textContent = item.num; cellNum.setAttribute('data-label', headers[0]); row.appendChild(cellNum); const cellText = document.createElement('td'); cellText.textContent = item.text; cellText.setAttribute('data-label', headers[1]); row.appendChild(cellText); const cellSpeak = document.createElement('td'); cellSpeak.setAttribute('data-label', headers[2]); const speakButton = document.createElement('button'); speakButton.textContent = 'Seslendir'; speakButton.classList.add('speak-btn'); speakButton.onclick = () => speakContent(item.text); cellSpeak.appendChild(speakButton); row.appendChild(cellSpeak); tbody.appendChild(row); }); table.appendChild(tbody);
+            contentArea.appendChild(table);
+        }
+
+        // Düzensiz Fiil Tablosu (Değişiklik yok)
+        function createIrregularVerbTable(data, headers) {
+            contentArea.innerHTML = '';
+            if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+            hideTooltip();
+            data.sort((a, b) => a.id - b.id);
+            const table = document.createElement('table');
+            const thead = document.createElement('thead'); const tbody = document.createElement('tbody'); const headerRow = document.createElement('tr'); headers.forEach(headerText => { const th = document.createElement('th'); th.textContent = headerText; headerRow.appendChild(th); }); thead.appendChild(headerRow); table.appendChild(thead);
+            data.forEach(item => { const row = document.createElement('tr'); const cellId = document.createElement('td'); cellId.textContent = item.id; cellId.setAttribute('data-label', headers[0]); row.appendChild(cellId); const cellTr = document.createElement('td'); cellTr.textContent = item.tr; cellTr.setAttribute('data-label', headers[1]); row.appendChild(cellTr); const cellV1 = document.createElement('td'); cellV1.textContent = item.v1; cellV1.setAttribute('data-label', headers[2]); row.appendChild(cellV1); const cellV2 = document.createElement('td'); cellV2.textContent = item.v2; cellV2.setAttribute('data-label', headers[3]); row.appendChild(cellV2); const cellSpeak = document.createElement('td'); cellSpeak.setAttribute('data-label', headers[4]); const speakButton = document.createElement('button'); speakButton.textContent = 'Seslendir'; speakButton.classList.add('speak-btn'); speakButton.onclick = () => speakVerbForms(item.v1, item.v2); cellSpeak.appendChild(speakButton); row.appendChild(cellSpeak); tbody.appendChild(row); }); table.appendChild(tbody);
+            contentArea.appendChild(table);
+        }
+
+        // 'Be' Alıştırması (Değişiklik yok)
+        function displayBeExercise(data) {
+            contentArea.innerHTML = '';
+            if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+            hideTooltip();
+            const container = document.createElement('div');
+            container.classList.add('exercise-container');
+            const title = document.createElement('h2');
+            title.textContent = "'Be' Fiili Alıştırması (Present Simple)";
+            title.classList.add('exercise-title');
+            container.appendChild(title);
+            const toggleButton = document.createElement('button');
+            toggleButton.textContent = 'Cevapları Göster';
+            toggleButton.classList.add('toggle-answers-btn');
+            let answersVisible = false;
+            toggleButton.onclick = () => {
+                answersVisible = !answersVisible;
+                const answerElements = container.querySelectorAll('.exercise-answer');
+                answerElements.forEach(el => { el.style.display = answersVisible ? 'inline-block' : 'none'; });
+                toggleButton.textContent = answersVisible ? 'Cevapları Gizle' : 'Cevapları Göster';
+            };
+            container.appendChild(toggleButton);
+            data.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('exercise-item');
+                const questionP = document.createElement('p');
+                questionP.classList.add('exercise-question');
+                questionP.textContent = `${item.id}. ${item.question}`;
+                itemDiv.appendChild(questionP);
+                const answerSpan = document.createElement('span');
+                answerSpan.classList.add('exercise-answer');
+                answerSpan.textContent = item.answer;
+                const speakButton = document.createElement('button');
+                speakButton.textContent = 'Seslendir';
+                speakButton.classList.add('speak-btn');
+                speakButton.onclick = (e) => { e.stopPropagation(); speakContent(item.answer); };
+                answerSpan.appendChild(speakButton);
+                itemDiv.appendChild(answerSpan);
+                container.appendChild(itemDiv);
+            });
+            contentArea.appendChild(container);
+        }
+
+        // Türkçe Okuma (Değişiklik yok)
+        function displayTurkishTextExercise(data) {
+            contentArea.innerHTML = '';
+            if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+            hideTooltip();
+            const container = document.createElement('div');
+            container.classList.add('exercise-container');
+            const titleElement = document.createElement('h2');
+            titleElement.textContent = data.title;
+            titleElement.classList.add('exercise-title');
+            container.appendChild(titleElement);
+            const paragraphElement = document.createElement('p');
+            paragraphElement.classList.add('turkish-text-paragraph');
+            paragraphElement.textContent = data.text;
+            container.appendChild(paragraphElement);
+            const controlsDiv = document.createElement('div');
+            controlsDiv.classList.add('turkish-text-controls');
+            const readButton = document.createElement('button');
+            readButton.textContent = 'Metni Oku';
+            readButton.classList.add('read-turkish-btn');
+            readButton.onclick = () => speakContent(data.text, 'tr-TR');
+            controlsDiv.appendChild(readButton);
+            container.appendChild(controlsDiv);
+            contentArea.appendChild(container);
+        }
+
+        // --- Tooltip Fonksiyonları (Mobil İyileştirmeleriyle) ---
+        function showTooltip(event, meaning, targetElement) {
+             if (!meaning || !targetElement) return;
+
+             wordTooltip.textContent = meaning;
+             wordTooltip.classList.add('visible');
+
+             // --- Mobil Konumlandırma İyileştirmesi ---
+             if (isMobile) {
+                 // Önceki aktif kelimenin stilini kaldır
+                 if (activeTooltipWordElement && activeTooltipWordElement !== targetElement) {
+                     activeTooltipWordElement.classList.remove('mobile-active-word');
+                 }
+                 // Yeni kelimeyi vurgula
+                 targetElement.classList.add('mobile-active-word');
+                 activeTooltipWordElement = targetElement; // Şu anki aktif kelimeyi sakla
+
+                 // Tooltip'i tıklanan kelimeye göre konumlandır, ekran dışına taşmasını engelle
+                 const targetRect = targetElement.getBoundingClientRect(); // Kelimenin konumu ve boyutları
+                 const tooltipRect = wordTooltip.getBoundingClientRect(); // Tooltip'in boyutları (görünür olduktan sonra daha doğru olur ama yaklaşık hesap için kullanılabilir)
+                 const viewportWidth = window.innerWidth;
+                 const viewportHeight = window.innerHeight;
+                 const scrollX = window.scrollX || window.pageXOffset;
+                 const scrollY = window.scrollY || window.pageYOffset;
+                 const gap = 10; // Kenarlara olan boşluk
+
+                 // İdeal konum: Kelimenin hemen altında, ortalanmış
+                 let idealTop = targetRect.bottom + scrollY + 5; // Kelimenin altı + 5px boşluk
+                 let idealLeft = targetRect.left + scrollX + (targetRect.width / 2) - (tooltipRect.width / 2);
+
+                 // Yatay taşma kontrolü
+                 if (idealLeft < scrollX + gap) {
+                     idealLeft = scrollX + gap; // Sol kenara yapıştır
+                 } else if (idealLeft + tooltipRect.width > scrollX + viewportWidth - gap) {
+                     idealLeft = scrollX + viewportWidth - tooltipRect.width - gap; // Sağ kenara yapıştır
+                 }
+
+                 // Dikey taşma kontrolü (alt)
+                 if (idealTop + tooltipRect.height > scrollY + viewportHeight - gap) {
+                     // Alt tarafta yer yoksa, kelimenin üstüne yerleştir
+                     idealTop = targetRect.top + scrollY - tooltipRect.height - 5;
+                 }
+                  // Dikey taşma kontrolü (üst - nadiren olur ama kontrol edelim)
+                 if (idealTop < scrollY + gap) {
+                     idealTop = scrollY + gap; // En üste yapıştır
+                 }
+
+                 wordTooltip.style.left = `${idealLeft}px`;
+                 wordTooltip.style.top = `${idealTop}px`;
+                 wordTooltip.style.position = 'absolute'; // Mobil için de absolute kullanıyoruz
+
+             }
+             // --- Masaüstü Konumlandırma ---
+             else {
+                 wordTooltip.style.position = 'absolute'; // Masaüstü için varsayılan
+                 const scrollX = window.scrollX || window.pageXOffset;
+                 const scrollY = window.scrollY || window.pageYOffset;
+                 let left = event.pageX + 15;
+                 let top = event.pageY + 15;
+
+                 const tooltipRect = wordTooltip.getBoundingClientRect();
+                 const viewportWidth = window.innerWidth;
+                 const viewportHeight = window.innerHeight;
+
+                 // Sağ ve Alt taşma kontrolü
+                 if (left + tooltipRect.width > scrollX + viewportWidth - 10) {
+                     left = event.pageX - tooltipRect.width - 15;
+                 }
+                 if (top + tooltipRect.height > scrollY + viewportHeight - 10) {
+                     top = event.pageY - tooltipRect.height - 15;
+                 }
+                 // Sol ve Üst taşma kontrolü (negatif koordinatları önle)
+                 if (left < scrollX + 10) left = scrollX + 10;
+                 if (top < scrollY + 10) top = scrollY + 10;
+
+                 wordTooltip.style.left = `${left}px`;
+                 wordTooltip.style.top = `${top}px`;
+             }
+         }
+
+         function hideTooltip() {
+             wordTooltip.classList.remove('visible');
+             // Mobil aktif kelime stilini kaldır
+             if (activeTooltipWordElement) {
+                 activeTooltipWordElement.classList.remove('mobile-active-word');
+                 activeTooltipWordElement = null; // Aktif kelimeyi sıfırla
+             }
+             // Tooltip pozisyonunu sıfırlamak genellikle gereksiz, çünkü görünmez olacak
+         }
+
+        // Hikaye Görüntüleme (Mobil Olay Dinleyici Güncellemesiyle)
+        function displayStory(title, storyHtml, speechText) {
+            contentArea.innerHTML = '';
+            if (speechSynthesis.speaking || isSpeakingQueue) { speechSynthesis.cancel(); speechQueue = []; isSpeakingQueue = false;}
+            hideTooltip(); // Yeni içerik yüklenirken tooltip'i gizle
+
+            const container = document.createElement('div');
+            container.classList.add('story-container');
+
+            const titleElement = document.createElement('h2');
+            titleElement.textContent = title;
+            titleElement.classList.add('story-title');
+            container.appendChild(titleElement);
+
+            const storyParagraph = document.createElement('div');
+            storyParagraph.classList.add('story-paragraph');
+
+            const parts = storyHtml.split(/(<br\s*\/?>)/gi);
+            parts.forEach(part => {
+                if (/<br\s*\/?>/i.test(part)) {
+                    storyParagraph.appendChild(document.createElement('br'));
+                    storyParagraph.appendChild(document.createElement('br'));
+                } else {
+                    const tokens = part.match(/\b[\w'-]+\b|[.,!?;:]|\s+/g) || [];
+                    tokens.forEach(token => {
+                        if (/\s+/.test(token)) {
+                            storyParagraph.appendChild(document.createTextNode(token));
+                        } else if (/\b[\w'-]+\b/.test(token)) {
+                            const wordSpan = document.createElement('span');
+                            wordSpan.textContent = token;
+                            wordSpan.classList.add('story-word');
+                            const lowerCaseToken = token.toLowerCase().replace(/[']/g, "");
+                            const meaning = wordDictionary[lowerCaseToken];
+
+                            if (meaning) {
+                                wordSpan.dataset.meaning = meaning;
+                                // --- Mobil Tıklama Olayı (Daha Güvenilir) ---
+                                if (isMobile) {
+                                     // 'click' olayı genellikle yeterli, 'touchstart' scroll ile çakışabilir.
+                                     // StopPropagation önemli!
+                                    wordSpan.addEventListener('click', (event) => {
+                                        event.stopPropagation(); // Body click olayını tetiklemeyi engelle!
+                                        // Başka bir tooltip açıksa kapat
+                                        if (activeTooltipWordElement && activeTooltipWordElement !== event.target) {
+                                            hideTooltip();
+                                        }
+                                        // Tooltip'i göster/gizle toggler gibi çalışabilir veya sadece gösterir.
+                                        // Sadece göstermesi daha iyi:
+                                        showTooltip(event, meaning, wordSpan);
+                                    });
+                                }
+                                // --- Masaüstü Hover ve Click Olayı ---
+                                else {
+                                    wordSpan.classList.add('speakable-desktop');
+                                    wordSpan.addEventListener('mouseover', (event) => showTooltip(event, meaning, wordSpan));
+                                    wordSpan.addEventListener('mouseout', hideTooltip);
+                                    wordSpan.addEventListener('click', (event) => {
+                                       event.stopPropagation();
+                                       speakContent(token);
+                                       hideTooltip(); // Kelime seslendirilince tooltip gizlensin
+                                    });
+                                }
+                            } else if (!isMobile) {
+                                wordSpan.classList.add('speakable-desktop');
+                                wordSpan.addEventListener('click', (event) => {
+                                    event.stopPropagation();
+                                    speakContent(token);
+                                });
+                            }
+                            storyParagraph.appendChild(wordSpan);
+                        } else {
+                             storyParagraph.appendChild(document.createTextNode(token));
+                         }
+                    });
+                }
+            });
+            container.appendChild(storyParagraph);
+
+            // Seslendirme Kontrolleri (Değişiklik yok)
+            const controlsDiv = document.createElement('div');
+            controlsDiv.classList.add('story-controls');
+            const listenButton = document.createElement('button');
+            listenButton.textContent = 'Hikayeyi Dinle';
+            listenButton.id = 'listenStoryBtn';
+            listenButton.classList.add('control-btn');
+            listenButton.onclick = () => playStoryAudio(speechText, currentPlaybackRate);
+            const pauseResumeButton = document.createElement('button');
+            pauseResumeButton.textContent = 'Durdur';
+            pauseResumeButton.id = 'pauseResumeStoryBtn';
+            pauseResumeButton.classList.add('control-btn');
+            pauseResumeButton.disabled = true;
+            pauseResumeButton.onclick = () => {
+                if (speechSynthesis.speaking && !isStoryPaused) { speechSynthesis.pause(); }
+                else if (speechSynthesis.paused) { speechSynthesis.resume(); }
+            };
+            const stopButton = document.createElement('button');
+            stopButton.textContent = 'Bitir';
+            stopButton.id = 'stopStoryBtn';
+            stopButton.classList.add('control-btn');
+            stopButton.disabled = true;
+            stopButton.onclick = () => { if (speechSynthesis.speaking || speechSynthesis.paused) { speechSynthesis.cancel(); } };
+            const rateControlGroup = document.createElement('div');
+            rateControlGroup.classList.add('rate-control-group');
+            const rateLabel = document.createElement('label');
+            rateLabel.textContent = 'Hız:'; rateLabel.htmlFor = 'rateRange';
+            const rateRange = document.createElement('input');
+            rateRange.type = 'range'; rateRange.id = 'rateRange'; rateRange.min = '0.5'; rateRange.max = '1.5'; rateRange.step = '0.1'; rateRange.value = currentPlaybackRate;
+            const rateValueSpan = document.createElement('span');
+            rateValueSpan.classList.add('rate-value'); rateValueSpan.textContent = currentPlaybackRate.toFixed(1);
+            rateRange.oninput = () => {
+                currentPlaybackRate = parseFloat(rateRange.value);
+                rateValueSpan.textContent = currentPlaybackRate.toFixed(1);
+                if (currentStoryUtterance && (speechSynthesis.speaking || speechSynthesis.paused)) {
+                     currentStoryUtterance.rate = currentPlaybackRate;
+                 }
+            };
+            rateControlGroup.appendChild(rateLabel); rateControlGroup.appendChild(rateRange); rateControlGroup.appendChild(rateValueSpan);
+            controlsDiv.appendChild(listenButton); controlsDiv.appendChild(pauseResumeButton); controlsDiv.appendChild(stopButton); controlsDiv.appendChild(rateControlGroup);
+            container.appendChild(controlsDiv);
+
+            contentArea.appendChild(container);
+        }
+
+        // Aktif Menü Butonu (Değişiklik yok)
+        function updateActiveButton(activeButton) {
+            menuButtons.forEach(button => button.classList.remove('active'));
+            if (activeButton) activeButton.classList.add('active');
+        }
+
+        // --- Olay Dinleyicileri (Değişiklik yok) ---
+        showAdjectivesBtn.addEventListener('click', () => { createListTable(adjectives, wordTableHeaders); updateActiveButton(showAdjectivesBtn); });
+        showVerbs1Btn.addEventListener('click', () => { createListTable(verbs1, wordTableHeaders); updateActiveButton(showVerbs1Btn); });
+        showVerbs2Btn.addEventListener('click', () => { createListTable(verbs2, wordTableHeaders); updateActiveButton(showVerbs2Btn); });
+        showIrregularVerbsBtn.addEventListener('click', () => { createIrregularVerbTable(irregularVerbs, irregularVerbTableHeaders); updateActiveButton(showIrregularVerbsBtn); });
+        showOrdinalsBtn.addEventListener('click', () => { createOrdinalTable(ordinalNumbers, ordinalTableHeaders); updateActiveButton(showOrdinalsBtn); });
+        showStoryMaryBtn.addEventListener('click', () => { displayStory(storyMaryTitle, storyMaryTextHtml, storyMaryTextSpeech); updateActiveButton(showStoryMaryBtn); });
+        showStoryElevatorBtn.addEventListener('click', () => { displayStory(storyElevatorTitle, storyElevatorTextHtml, storyElevatorTextSpeech); updateActiveButton(showStoryElevatorBtn); });
+        showBeExerciseBtn.addEventListener('click', () => { displayBeExercise(beExercise); updateActiveButton(showBeExerciseBtn); });
+        showTurkishExerciseBtn.addEventListener('click', () => { displayTurkishTextExercise(turkishTextExercise); updateActiveButton(showTurkishExerciseBtn); });
+
+        // --- Sayfa Yüklendiğinde & Genel Olaylar ---
+        document.addEventListener('DOMContentLoaded', () => {
+             createListTable(adjectives, wordTableHeaders);
+             updateActiveButton(showAdjectivesBtn);
+
+             // Mobil'de body'e veya boşluğa tıklanınca tooltip'i kapat
+             if (isMobile) {
+                 // 'click' yerine 'touchstart' veya 'pointerdown' daha hızlı tepki verebilir ama 'click' daha güvenli
+                 document.body.addEventListener('click', (event) => {
+                     // Eğer tıklanan yer tooltip'in kendisi veya bir story-word değilse kapat
+                     if (!event.target.closest('#wordTooltip') && !event.target.closest('.story-word[data-meaning]')) {
+                         hideTooltip();
+                     }
+                 }, false); // Capture phase kullanmıyoruz
+             }
+        });
+
+        // Sekme Değiştirme / Pencere Küçültme (Değişiklik yok)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            speechSynthesis.cancel();
+            isStoryPaused = false; speechQueue = []; isSpeakingQueue = false; currentStoryUtterance = null;
+            const pauseBtn = document.getElementById('pauseResumeStoryBtn'); const stopBtn = document.getElementById('stopStoryBtn');
+            if (pauseBtn) { pauseBtn.textContent = 'Durdur'; pauseBtn.disabled = true; }
+            if (stopBtn) { stopBtn.disabled = true; }
+            hideTooltip(); // Sekme değişince tooltip'i de gizle
+          }
+        });
+
+        // --- JavaScript Kodu Bitişi ---
+    </script>
+</body>
+</html>
